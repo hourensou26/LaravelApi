@@ -1,5 +1,8 @@
 <?php
 
+// API Controllers
+use App\Http\Controllers\AuthController;
+
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Response;
 
@@ -10,4 +13,11 @@ Route::get('/test', function () {
         [],
         JSON_UNESCAPED_UNICODE
     );
+});
+
+Route::post('/Auth/login', [AuthController::class, 'login']);
+
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get('/user', [AuthController::class, 'user']);
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });
