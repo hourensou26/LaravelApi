@@ -80,25 +80,33 @@ jobs:
           echo "DB_PASSWORD=root" >> .env
           echo "REDIS_HOST=127.0.0.1" >> .env
           echo "REDIS_PORT=6379" >> .env
-          echo "CACHE_DRIVER=redis" >> .env
-          echo "SESSION_DRIVER=redis" >> .env
-          echo "QUEUE_CONNECTION=redis" >> .env
+          echo "CACHE_DRIVER=file" >> .env
+          echo "SESSION_DRIVER=file" >> .env
+          echo "QUEUE_CONNECTION=sync" >> .env
 
       - name: Generate application key
         working-directory: ./backend
         run: php artisan key:generate
 
-      - name: Clear and cache config
+      - name: Clear config (before migration)
         working-directory: ./backend
         run: |
           php artisan config:clear
-          php artisan cache:clear
           php artisan route:clear
           php artisan view:clear
 
       - name: Run database migrations
         working-directory: ./backend
         run: php artisan migrate --force --seed
+
+      - name: Update cache driver to redis (after migration)
+        working-directory: ./backend
+        run: |
+          sed -i 's/CACHE_DRIVER=file/CACHE_DRIVER=redis/' .env
+          sed -i 's/SESSION_DRIVER=file/SESSION_DRIVER=redis/' .env
+          sed -i 's/QUEUE_CONNECTION=sync/QUEUE_CONNECTION=redis/' .env
+          php artisan config:clear
+          php artisan cache:clear
 
       - name: Run Laravel Pint (Code Style)
         working-directory: ./backend
@@ -259,12 +267,23 @@ jobs:
     steps:
       - name: Check build status
         run: |
+          echo "Backend Test: ${{ needs.backend-test.result }}"
+          echo "Frontend Test: ${{ needs.frontend-test.result }}"
+          echo "Docker Build: ${{ needs.docker-build.result }}"
+          
+          # docker-buildがスキップされた場合は成功として扱う
+          DOCKER_STATUS="${{ needs.docker-build.result }}"
+          if [ "$DOCKER_STATUS" == "skipped" ]; then
+            DOCKER_STATUS="success"
+          fi
+          
           if [ "${{ needs.backend-test.result }}" == "success" ] && \
              [ "${{ needs.frontend-test.result }}" == "success" ] && \
-             [ "${{ needs.docker-build.result }}" == "success" ]; then
-            echo "✅ All tests passed!"
+             [ "$DOCKER_STATUS" == "success" ]; then
+            echo "✅ All required tests passed!"
             exit 0
           else
             echo "❌ Some tests failed"
+            echo "Please check the logs above for details"
             exit 1
           fi
