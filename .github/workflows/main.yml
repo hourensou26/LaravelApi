@@ -7,7 +7,7 @@ on:
     branches: [ main, develop ]
 
 env:
-  PHP_VERSION: '8.1'
+  PHP_VERSION: '8.2'
   NODE_VERSION: '20'
 
 jobs:
@@ -75,7 +75,7 @@ jobs:
           echo "DB_CONNECTION=mysql" >> .env
           echo "DB_HOST=127.0.0.1" >> .env
           echo "DB_PORT=3306" >> .env
-          echo "DB_DATABASE=laravel_test" >> .env
+          echo "DB_DATABASE=react_app" >> .env
           echo "DB_USERNAME=root" >> .env
           echo "DB_PASSWORD=root" >> .env
           echo "REDIS_HOST=127.0.0.1" >> .env
