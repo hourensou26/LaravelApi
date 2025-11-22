@@ -15,9 +15,10 @@ Route::get('/test', function () {
     );
 });
 
+Route::post('/Auth/register', [AuthController::class, 'register']);
 Route::post('/Auth/login', [AuthController::class, 'login']);
 
 Route::middleware(['auth:sanctum'])->group(function () {
-    Route::get('/user', [AuthController::class, 'user']);
+    Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });
